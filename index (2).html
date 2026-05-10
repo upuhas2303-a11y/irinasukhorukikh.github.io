@@ -475,6 +475,28 @@
         height: 240px;
     }
 }
+/* Исправление для всех полей ввода на мобильных устройствах */
+max-width: 768px {
+    /* Запрещаем полям быть шире родителя */
+    .form-group input,
+    .form-group input[type="date"],
+    .form-group input[type="time"] {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Убираем лишние отступы у блоков с датой и временем */
+    .form-row {
+        display: block;
+        width: 100%;
+    }
+    
+    .form-row .form-group {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+}
     </style>
 </head>
 <body>
