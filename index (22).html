@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Кафе «Розовый пион» — меню, бронирование, предзаказ</title>
+    <!-- Подключаем карты от Яндекса. Ключ свой, без него не заведётся -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=ваш_api_ключ&lang=ru_RU" type="text/javascript"></script>
+    <style>
+        /* Сбрасываем стандартные отступы, чтобы всё прилипало к краям где надо */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #fff5f8;
+            color: #4a2c3a;
+            line-height: 1.4;
+        }
+
+        /* Плавная прокрутка по якорям — приятная мелочь */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Центрируем контент, но не растягиваем на всю ширину */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Шапка чуть прозрачная и с размытием, чтобы не перекрывала текст полностью */
+        .header {
+            background: #ffe0eb;
+            box-shadow: 0 2px 12px rgba(255, 128, 128, 0.08);
+            padding: 20px 0;
+            border-bottom: 1px solid #ffd0de;
+            position: sticky;
+            top: 0;
+            background: rgba(255, 224, 235, 0.96);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: #d46b7e;
+        }
+
+        .logo span {
+            font-weight: 400;
+            color: #b85a6b;
+            font-size: 0.9rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #7a4b5c;
+            font-weight: 500;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 4px;
+        }
+
+        .nav-links a:hover {
+            color: #d46b7e;
+            border-bottom-color: #d46b7e;
+        }
+
+        /* Приветственная шапка с закруглением снизу */
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+            background: #ffeef3;
+            margin-bottom: 30px;
+            border-radius: 0 0 40px 40px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #a5425c;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #c2687e;
+            margin-top: 12px;
+        }
+
+        /* Блок "О нас" с лёгкой тенью и внутренним отступом */
+        .about-section {
+            background: #ffffffdd;
+            border-radius: 40px;
+            padding: 40px 32px;
+            margin: 30px 0 20px;
+            box-shadow: 0 6px 14px rgba(212, 107, 126, 0.05);
+            border: 1px solid #ffdfe8;
+        }
+
+        .about-section h2 {
+            font-size: 1.9rem;
+            margin-bottom: 20px;
+            color: #d46b7e;
+        }
+
+        .about-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .about-text {
+            flex: 2;
+            font-size: 1.05rem;
+            line-height: 1.5;
+            color: #5e3a48;
+        }
+
+        .about-sign {
+            flex: 1;
+            background: #ffeef3;
+            padding: 20px;
+            border-radius: 32px;
+            text-align: center;
+            font-style: italic;
+            color: #b85a6b;
+        }
+
+        /* Кнопки фильтра — сделаны как большие таблетки */
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+            margin: 35px 0 35px;
+        }
+
+        .filter-btn {
+            background: #fff0f4;
+            border: 1px solid #ffcedb;
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #9b556b;
+        }
+
+        .filter-btn.active {
+            background: #d46b7e;
+            border-color: #d46b7e;
+            color: white;
+        }
+
+        .filter-btn:hover {
+            background: #ffe0eb;
+        }
+
+        /* Сетка карточек. Автоматически подбирается количество колонок */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 28px;
+            margin-bottom: 50px;
+        }
+
+        /* Одна карточка блюда */
+        .dish-card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 6px 14px rgba(212, 107, 126, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ffdfe8;
+        }
+
+        .dish-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 26px rgba(212, 107, 126, 0.15);
+        }
+
+        .dish-img {
+            background: #fff0f4;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .dish-info {
+            padding: 18px 18px 20px;
+            flex: 1;
+        }
+
+        .dish-info h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #a5425c;
+        }
+
+        .dish-desc {
+            color: #b07c8c;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .dish-price {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: #d46b7e;
+            margin-bottom: 16px;
+        }
+
+        .order-btn {
+            background: #ffeef3;
+            border: 1px solid #ffcedb;
+            padding: 10px 0;
+            width: 100%;
+            font-weight: 600;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #b85a6b;
+        }
+
+        .order-btn:hover {
+            background: #d46b7e;
+            color: white;
+            border-color: #d46b7e;
+        }
+
+        /* Блок предзаказа — как листочек, который заполняется */
+        .preorder-section {
+            background: #fff5f8;
+            border-radius: 32px;
+            padding: 28px 24px;
+            margin: 40px 0;
+            border: 1px solid #ffdfe8;
+        }
+
+        .preorder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .preorder-header h3 {
+            color: #b85a6b;
+        }
+
+        .preorder-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .preorder-list li {
+            padding: 10px 0;
+            border-bottom: 1px dashed #ffd0de;
+            display: flex;
+            justify-content: space-between;
+            color: #5e3a48;
+        }
+
+        .clear-preorder {
+            background: none;
+            border: none;
+            color: #d46b7e;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .empty-message {
+            color: #c2889a;
+            padding: 12px 0;
+        }
+
+        /* Форма брони — белый блок с тенями */
+        .booking-form {
+            background: white;
+            border-radius: 32px;
+            padding: 32px 28px;
+            margin: 50px 0;
+            box-shadow: 0 8px 20px rgba(212, 107, 126, 0.05);
+            border: 1px solid #ffdfe8;
+        }
+
+        .booking-form h3 {
+            color: #a5425c;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #7a4b5c;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #ffcedb;
+            border-radius: 28px;
+            font-size: 1rem;
+            background: #fffefc;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .submit-btn {
+            background: #d46b7e;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 60px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #b85a6b;
+        }
+
+        .error-msg {
+            color: #e0758c;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        /* Контакты с картой — гибкий блок */
+        .contacts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 50px 0;
+            background: #ffeef3;
+            border-radius: 32px;
+            padding: 28px;
+        }
+
+        .contacts-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .contacts-info h3 {
+            color: #a5425c;
+            margin-bottom: 16px;
+        }
+
+        .contacts-info p {
+            margin: 12px 0;
+            color: #5e3a48;
+        }
+
+        .phone-link {
+            display: inline-block;
+            background: #d46b7e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            margin-top: 12px;
+        }
+
+        .map-container {
+            flex: 1.2;
+            min-width: 260px;
+            height: 280px;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid #ffdfe8;
+            margin-top: 20px;
+            color: #b85a6b;
+        }
+
+        max-width: 768px {
+    .hero h1 {
+        font-size: 1.9rem;
+    }
+    
+    /* Исправление формы для мобильных — поля не вылезают */
+    .form-row {
+        display: block;
+        width: 100%;
+    }
+    
+    .form-row .form-group {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+    
+    .form-group input,
+    .form-group input[type="date"],
+    .form-group input[type="time"] {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        font-size: 16px; /* Чтобы iPhone не зумил при фокусе */
+    }
+    
+    .header-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .filter-btn {
+        padding: 6px 18px;
+        font-size: 0.85rem;
+    }
+    
+    .about-grid {
+        flex-direction: column;
+    }
+    
+    .contacts {
+        flex-direction: column;
+    }
+    
+    .map-container {
+        height: 240px;
+    }
+}
+/* Жёсткий фикс для полей даты и времени на мобильных */
+max-width: 768px {
+    .form-group input[type="date"],
+    .form-group input[type="time"] {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 12px 12px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Чтобы родительский контейнер тоже не ограничивал */
+    .form-group {
+        width: 100%;
+        overflow: visible;
+    }
+    
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0;
+    }
+    
+    .form-row .form-group {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <div class="logo">Кафе «Розовый пион» <span> — нежно и вкусно</span></div>
+        <div class="nav-links">
+            <a href="#about">О нас</a>
+            <a href="#menu">Меню</a>
+            <a href="#booking">Бронь стола</a>
+            <a href="#contacts">Контакты</a>
+        </div>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="container">
+        <h1>Десерты, как поцелуй. Супы, как объятие.</h1>
+        <p>Смотри меню, собирай предзаказ, бронируй столик без хлопот</p>
+    </div>
+</section>
+
+<main class="container">
+    <section id="about">
+        <div class="about-section">
+            <h2>🌸 О кафе «Розовый пион»</h2>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p>Мы открылись как домашняя кондитерская, но быстро поняли: люди хотят не только пирожных, а целого тёплого вечера. Теперь у нас есть супы, салаты, горячее и, конечно, те самые десерты, ради которых едут через полгорода.</p>
+                    <br>
+                    <p>Всё — без консервантов, без заморозки. Повара приходят к шести утра ставить тесто. Официанты помнят, как вы любите кофе. И да, у нас действительно розовые стены и пионы на каждой стойке — не только в названии.</p>
+                </div>
+                <div class="about-sign">
+                    🌷 «Главный ингредиент — ваше настроение»<br>
+                    — шеф-кондитер Алина
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu">
+        <div class="filter-buttons" id="filterButtons">
+            <button class="filter-btn active" data-category="all">Всё меню</button>
+            <button class="filter-btn" data-category="salads">Салаты</button>
+            <button class="filter-btn" data-category="soups">Супы</button>
+            <button class="filter-btn" data-category="hot">Горячее</button>
+            <button class="filter-btn" data-category="desserts">Десерты</button>
+            <button class="filter-btn" data-category="drinks">Напитки</button>
+        </div>
+        <div class="menu-grid" id="menuGrid"></div>
+    </section>
+
+    <div class="preorder-section" id="preorderSection">
+        <div class="preorder-header">
+            <h3>🍽️ Мой список к столу (предзаказ)</h3>
+            <button class="clear-preorder" id="clearPreorderBtn">Очистить список</button>
+        </div>
+        <ul class="preorder-list" id="preorderList">
+            <li class="empty-message">Пока ничего не выбрано. Нажмите «Хочу это» у блюда или напитка.</li>
+        </ul>
+    </div>
+
+    <section id="booking">
+        <div class="booking-form">
+            <h3>📅 Забронировать столик в «Розовом пионе»</h3>
+            <p style="margin-bottom: 20px; color: #7a4b5c;">Оставьте контакты — администратор подтвердит бронь за пару минут</p>
+            <form id="bookForm">
+                <div class="form-group">
+                    <label>Ваше имя *</label>
+                    <input type="text" id="name" placeholder="Например, Анастасия">
+                </div>
+                <div class="form-group">
+                    <label>Телефон *</label>
+                    <input type="tel" id="phone" placeholder="+7 900 123-45-67">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Дата *</label>
+                        <input type="date" id="date">
+                    </div>
+                    <div class="form-group">
+                        <label>Время *</label>
+                        <input type="time" id="time">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Количество гостей</label>
+                    <input type="number" id="guests" min="1" max="14" value="2">
+                </div>
+                <button type="submit" class="submit-btn">Забронировать столик</button>
+                <div id="formError" class="error-msg" style="margin-top: 12px;"></div>
+            </form>
+        </div>
+    </section>
+
+    <section id="contacts" class="contacts">
+        <div class="contacts-info">
+            <h3>Найти нас легко, уйти — сложно</h3>
+            <p>📍 Санкт-Петербург, ул. Цветочная, 15</p>
+            <p>⏰ Ежедневно 10:00 – 23:00</p>
+            <p>📞 <a href="tel:+78125556677" class="phone-link">+7 (812) 555-66-77</a></p>
+            <p>✉️ hello@rozycafe.ru</p>
+            <p>🚇 Ближайшее метро: «Садовая» (5 мин пешком)</p>
+        </div>
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>«Розовый пион» — место, где еда розовеет от любви</p>
+</footer>
+
+<script>
+    // Данные меню — массив объектов. Каждый объект = одно блюдо или напиток
+    const menuData = [
+        { id: 1, name: "Цезарь с креветками", desc: "Классический соус, пармезан, айсберг", price: 520, category: "salads", emoji: "🦐" },
+        { id: 2, name: "Греческий с пионом", desc: "Фета, маслины, огурец, розовая заправка", price: 440, category: "salads", emoji: "🇬🇷" },
+        { id: 3, name: "Тёплый с уткой", desc: "Апельсиновый соус, микрозелень", price: 580, category: "salads", emoji: "🍊" },
+        { id: 4, name: "Тыквенный суп", desc: "Со сливками и тыквенными семечками", price: 390, category: "soups", emoji: "🎃" },
+        { id: 5, name: "Борщ с пампушкой", desc: "Сметана, укроп, чеснок", price: 420, category: "soups", emoji: "🍲" },
+        { id: 6, name: "Суп-пюре из томатов", desc: "Базилик, сливки, гренки", price: 370, category: "soups", emoji: "🍅" },
+        { id: 7, name: "Говяжьи щёчки", desc: "Пюре из розового картофеля, демиглас", price: 890, category: "hot", emoji: "🥩" },
+        { id: 8, name: "Лосось на гриле", desc: "Запечённые овощи, розовый соус", price: 990, category: "hot", emoji: "🐟" },
+        { id: 9, name: "Паста с трюфелем", desc: "Пармезан, масло трюфеля, вешенки", price: 790, category: "hot", emoji: "🍝" },
+        { id: 10, name: "Морковный пирог", desc: "Ореховый крамбл, сливочный сыр", price: 340, category: "desserts", emoji: "🥕" },
+        { id: 11, name: "Брауни с малиной", desc: "Горький шоколад, малиновый кули", price: 370, category: "desserts", emoji: "🍫" },
+        { id: 12, name: "Чизкейк «Пион»", desc: "Нежный, с ягодным сердечком", price: 410, category: "desserts", emoji: "🍰" },
+        { id: 13, name: "Капучино «Розовый бархат»", desc: "Итальянская обжарка, 200 мл", price: 230, category: "drinks", emoji: "☕" },
+        { id: 14, name: "Латте с малиновым сиропом", desc: "Пышная пенка, цветочная нотка", price: 270, category: "drinks", emoji: "🥛" },
+        { id: 15, name: "Матча латте", desc: "Японский чай, кокосовое молоко", price: 330, category: "drinks", emoji: "🍵" },
+        { id: 16, name: "Лимонад «Ягодный пион»", desc: "Мята, клубника, лайм", price: 310, category: "drinks", emoji: "🍹" },
+        { id: 17, name: "Розовый глинтвейн", desc: "Виноградный сок, пряности, апельсин", price: 320, category: "drinks", emoji: "🍊" }
+    ];
+
+    let currentCategory = "all";      // Какая категория сейчас выбрана
+    let preorderItems = [];           // Что положили в предзаказ
+
+    // Отрисовывает меню: фильтрует массив и генерирует HTML-карточки
+    function renderMenu() {
+        const container = document.getElementById("menuGrid");
+        if (!container) return;
+
+        // Оставляем только те блюда, которые подходят под выбранную категорию
+        let filtered = menuData.filter(item => 
+            currentCategory === "all" ? true : item.category === currentCategory
+        );
+
+        // Если ничего не подошло — показываем дружеское сообщение
+        if (filtered.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:#c2889a;">В этой категории пока ничего нет, загляните в «Напитки» 😉</div>`;
+            return;
+        }
+
+        // Превращаем каждый объект в строку HTML и всё склеиваем
+        container.innerHTML = filtered.map(dish => `
+            <div class="dish-card">
+                <div class="dish-img">${dish.emoji}</div>
+                <div class="dish-info">
+                    <h3>${dish.name}</h3>
+                    <div class="dish-desc">${dish.desc}</div>
+                    <div class="dish-price">${dish.price} ₽</div>
+                    <button class="order-btn" data-id="${dish.id}" data-name="${dish.name}" data-price="${dish.price}">Хочу это ✨</button>
+                </div>
+            </div>
+        `).join("");
+
+        // На каждую новую кнопку вешаем обработчик — иначе они не будут работать
+        document.querySelectorAll('.order-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.dataset.id);
+                const name = btn.dataset.name;
+                const price = parseInt(btn.dataset.price);
+                addToPreorder(id, name, price);
+            });
+        });
+    }
+
+    // Добавляет блюдо в предзаказ, если его там ещё нет
+    function addToPreorder(id, name, price) {
+        if (preorderItems.some(item => item.id === id)) {
+            alert(`"${name}" уже в вашем предзаказе. Мы не забудем 😊`);
+            return;
+        }
+        preorderItems.push({ id, name, price });
+        renderPreorderList();
+    }
+
+    // Обновляет список предзаказа и пересчитывает итоговую сумму
+    function renderPreorderList() {
+        const listContainer = document.getElementById("preorderList");
+        if (!listContainer) return;
+
+        if (preorderItems.length === 0) {
+            listContainer.innerHTML = `<li class="empty-message">Пока ничего не выбрано. Нажмите «Хочу это» у блюда или напитка.</li>`;
+            return;
+        }
+
+        let total = preorderItems.reduce((sum, i) => sum + i.price, 0);
+        listContainer.innerHTML = preorderItems.map(item => `
+            <li>
+                <span>${item.name}</span>
+                <span style="font-weight:500;">${item.price} ₽</span>
+            </li>
+        `).join("");
+
+        // Добавляем строку с общей суммой
+        const totalItem = document.createElement("li");
+        totalItem.style.fontWeight = "bold";
+        totalItem.style.borderTop = "2px solid #ffcedb";
+        totalItem.style.marginTop = "8px";
+        totalItem.style.paddingTop = "10px";
+        totalItem.innerHTML = `<span>💰 Итого к столу:</span><span>${total} ₽</span>`;
+        listContainer.appendChild(totalItem);
+    }
+
+    // Полностью очищает предзаказ
+    function clearPreorder() {
+        preorderItems = [];
+        renderPreorderList();
+    }
+
+    // Проверяет, правильно ли заполнена форма брони
+    function validateBookingForm(name, phone, date, time, guests) {
+        if (!name || name.trim().length < 2) return "Имя — хотя бы две буквы, пожалуйста";
+        if (!phone || phone.replace(/[^0-9+]/g, '').length < 10) return "Телефон нужен, чтобы подтвердить бронь. Введите минимум 10 цифр";
+        if (!date) return "Выберите дату визита";
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        if (selectedDate < today) return "Дата не может быть вчерашней 😉 выберите сегодня или позже";
+        if (!time) return "Укажите примерное время. Мы подстроимся";
+        if (!guests || guests < 1) return "Гостей должно быть хотя бы 1";
+        return null;
+    }
+
+    // Обработчик отправки формы — не даёт перезагрузить страницу, выводит ошибки или подтверждение
+    function submitBooking(event) {
+        event.preventDefault();
+        const name = document.getElementById("name")?.value.trim() || "";
+        const phone = document.getElementById("phone")?.value.trim() || "";
+        const date = document.getElementById("date")?.value || "";
+        const time = document.getElementById("time")?.value || "";
+        const guests = parseInt(document.getElementById("guests")?.value) || 0;
+
+        const errorMsg = validateBookingForm(name, phone, date, time, guests);
+        const errorDiv = document.getElementById("formError");
+        if (errorMsg) {
+            if (errorDiv) errorDiv.innerText = errorMsg;
+            return;
+        }
+        if (errorDiv) errorDiv.innerText = "";
+
+        let preorderText = "";
+        if (preorderItems.length > 0) {
+            preorderText = "\n🍽️ Ваш предзаказ: " + preorderItems.map(i => `${i.name} (${i.price}₽)`).join(", ");
+        } else {
+            preorderText = "\n🍃 Предзаказ не оставлен — сможете выбрать на месте.";
+        }
+
+        alert(`✅ Заявка на бронирование отправлена!\n\n${name}, столик на ${guests} чел.\nДата: ${date} в ${time}\nТелефон: ${phone}\n${preorderText}\n\nСкоро напишем или позвоним. Ждём в гости ❤️`);
+    }
+
+    // Вешаем обработчики на кнопки фильтров
+    function setupFilters() {
+        const btns = document.querySelectorAll(".filter-btn");
+        btns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const category = btn.dataset.category;
+                if (!category) return;
+                currentCategory = category;
+                btns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                renderMenu();
+            });
+        });
+    }
+
+    // Загружаем Яндекс.Карту и ставим метку кафе
+    function initMap() {
+        const cafeCoords = [59.9311, 30.3609];
+        const map = new ymaps.Map("map", {
+            center: cafeCoords,
+            zoom: 16,
+            controls: ["zoomControl", "fullscreenControl"]
+        });
+        const placemark = new ymaps.Placemark(cafeCoords, {
+            balloonContentHeader: "🌸 Кафе «Розовый пион»",
+            balloonContentBody: "ул. Цветочная, 15<br>☎ +7 (812) 555-66-77",
+            hintContent: "Розовый пион"
+        });
+        map.geoObjects.add(placemark);
+    }
+
+    // Дождёмся загрузки API карт и только тогда их инициализируем
+    ymaps.ready(initMap);
+
+    // Стартовая инициализация — всё, что нужно при загрузке страницы
+    function init() {
+        renderMenu();
+        setupFilters();
+        renderPreorderList();
+        const clearBtn = document.getElementById("clearPreorderBtn");
+        if (clearBtn) clearBtn.addEventListener("click", clearPreorder);
+        const form = document.getElementById("bookForm");
+        if (form) form.addEventListener("submit", submitBooking);
+    }
+
+    init();
+</script>
+</body>
+</html>
