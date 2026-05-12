@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Calorie | Калькулятор калорий</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1a2f2c 0%, #0e1e1c 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* главная карточка */
+        .calorie-card {
+            max-width: 580px;
+            width: 100%;
+            background: rgba(255, 248, 235, 0.97);
+            backdrop-filter: blur(2px);
+            border-radius: 56px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 215, 175, 0.3);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .calorie-card:hover {
+            transform: scale(1.01);
+        }
+
+        /* шапка с энергией */
+        .hero {
+            background: #f7b05e;
+            background: linear-gradient(135deg, #ffb347, #ff8c1a);
+            padding: 28px 24px;
+            text-align: center;
+            color: #2c221b;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .hero h1 span {
+            font-size: 2.2rem;
+        }
+
+        .hero p {
+            margin-top: 8px;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        /* основной контент */
+        .content {
+            padding: 28px 28px 32px;
+        }
+
+        /* группы полей */
+        .input-group {
+            margin-bottom: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #3e2a22;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group label i {
+            font-style: normal;
+            font-size: 1.2rem;
+        }
+
+        .input-field {
+            display: flex;
+            align-items: center;
+            background: #fff8f0;
+            border-radius: 40px;
+            border: 1.5px solid #ffe0bc;
+            transition: all 0.2s;
+            padding: 4px 18px;
+        }
+
+        .input-field:focus-within {
+            border-color: #ff8c1a;
+            box-shadow: 0 0 0 3px rgba(255, 140, 26, 0.2);
+            background: white;
+        }
+
+        .input-field input, .input-field select {
+            width: 100%;
+            padding: 14px 0 14px 8px;
+            font-size: 1rem;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-weight: 500;
+            color: #2c3e2b;
+        }
+
+        .input-field select {
+            cursor: pointer;
+        }
+
+        .input-field span {
+            color: #b97f44;
+            font-weight: 500;
+            padding-right: 6px;
+        }
+
+        /* двойной ряд для пола и активности */
+        .double-row {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .double-row .input-group {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        /* кнопка расчёта */
+        .calc-btn {
+            width: 100%;
+            background: #2b5e4c;
+            border: none;
+            padding: 16px;
+            border-radius: 60px;
+            font-size: 1.25rem;
+
+
+font-weight: 700;
+            color: white;
+            margin: 24px 0 20px;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 6px 0 #1b3e32;
+        }
+
+        .calc-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #1b3e32;
+        }
+
+        .calc-btn:hover {
+            background: #3f7a64;
+        }
+
+        /* результат */
+        .result-panel {
+            background: #f3efe7;
+            border-radius: 36px;
+            padding: 18px 20px;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .total-calories {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .total-calories .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #a57248;
+            font-weight: 600;
+        }
+
+        .kcal-number {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: #2e5a47;
+            line-height: 1;
+            margin: 8px 0;
+            letter-spacing: -2px;
+        }
+
+        .breakdown {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-top: 1px solid #e2d4c6;
+            padding-top: 16px;
+            margin-top: 8px;
+        }
+
+        .breakdown-item {
+            flex: 1;
+            text-align: center;
+            background: white;
+            border-radius: 28px;
+            padding: 10px 5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .breakdown-item span:first-child {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #a07854;
+            display: block;
+        }
+
+        .breakdown-item .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #2c4a3b;
+        }
+
+        .info-message {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 18px;
+            color: #9b7b5e;
+            background: #fff3e6;
+            padding: 8px 12px;
+            border-radius: 60px;
+        }
+
+        .error-message {
+            color: #c0392b;
+            background: #ffe6e2;
+            border-radius: 60px;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 14px 20px 20px;
+            color: #c2a07e;
+            border-top: 1px solid #eedfcb;
+            background: #fffbf5;
+        }
+
+        max-width: 500px {
+            .content {
+                padding: 20px;
+            }
+            .kcal-number {
+                font-size: 2.8rem;
+            }
+            .breakdown-item .value {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="calorie-card">
+    <div class="hero">
+        <h1>
+            <span>🔥</span> CalorieFuel
+        </h1>
+        <p>Твой персональный баланс энергии</p>
+    </div>
+    <div class="content">
+        <!-- Параметры пользователя -->
+        <div class="double-row">
+            <div class="input-group">
+                <label><i>🧑</i> Пол</label>
+                <div class="input-field">
+                    <select id="gender">
+                        <option value="female">Женщина</option>
+                        <option value="male" selected>Мужчина</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label><i>📏</i> Возраст (лет)</label>
+                <div class="input-field">
+
+
+<input type="number" id="age" placeholder="25" value="28" step="1" min="15" max="120">
+                </div>
+            </div>
+        </div>
+
+        <div class="double-row">
+            <div class="input-group">
+                <label><i>⚖️</i> Вес (кг)</label>
+                <div class="input-field">
+                    <input type="number" id="weight" placeholder="70" value="70" step="0.5" min="20" max="300">
+                </div>
+            </div>
+            <div class="input-group">
+                <label><i>📏</i> Рост (см)</label>
+                <div class="input-field">
+                    <input type="number" id="height" placeholder="170" value="170" step="1" min="100" max="250">
+                </div>
+            </div>
+        </div>
+
+        <!-- Уровень активности -->
+        <div class="input-group">
+            <label><i>🏃‍♂️</i> Физическая активность</label>
+            <div class="input-field">
+                <select id="activity">
+                    <option value="1.2">Минимальная (сидячий образ жизни)</option>
+                    <option value="1.375">Лёгкая (1-3 тренировки в неделю)</option>
+                    <option value="1.55" selected>Умеренная (3-5 тренировок)</option>
+                    <option value="1.725">Высокая (6-7 тренировок)</option>
+                    <option value="1.9">Экстремальная (физическая работа + спорт)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Кнопка расчёта -->
+        <button class="calc-btn" id="calculateBtn">
+            <span>✨</span> Рассчитать суточную норму
+        </button>
+
+        <!-- Блок результатов -->
+        <div id="resultContainer">
+            <div class="result-panel">
+                <div class="total-calories">
+                    <div class="label">ТВОЯ ДНЕВНАЯ НОРМА</div>
+                    <div class="kcal-number" id="kcalDisplay">—</div>
+                    <div style="font-size: 0.8rem; font-weight: 500;">ккал / день</div>
+                </div>
+                <div class="breakdown" id="breakdownInfo">
+                    <div class="breakdown-item">
+                        <span>⚡ Базовый метаболизм (BMR)</span>
+                        <div class="value" id="bmrValue">—</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>🏋️‍♂️ С учётом активности</span>
+                        <div class="value" id="tdeeValue">—</div>
+                    </div>
+                </div>
+                <div class="info-message" id="adviceMessage">
+                    Заполните данные и нажмите «Рассчитать»
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        🍎 Формула Миффлина — Сан-Жеора | Индивидуальный подход к здоровому питанию
+    </footer>
+</div>
+
+<script>
+    (function() {
+        // DOM элементы
+        const genderSelect = document.getElementById('gender');
+        const ageInput = document.getElementById('age');
+        const weightInput = document.getElementById('weight');
+        const heightInput = document.getElementById('height');
+        const activitySelect = document.getElementById('activity');
+        const calculateBtn = document.getElementById('calculateBtn');
+
+        // Элементы вывода
+        const kcalDisplay = document.getElementById('kcalDisplay');
+        const bmrValueSpan = document.getElementById('bmrValue');
+        const tdeeValueSpan = document.getElementById('tdeeValue');
+        const adviceMessage = document.getElementById('adviceMessage');
+
+        // Функция для показа ошибки (кратковременной в блоке советов, но не затирает полностью)
+        function showError(text) {
+            adviceMessage.innerHTML = `⚠️ ${text}`;
+            adviceMessage.style.background = "#ffe0db";
+            adviceMessage.style.color = "#bc3900";
+            // через 3 секунды вернуть нейтральный совет, если снова не будет пересчёта
+            setTimeout(() => {
+                if
+
+
+(adviceMessage.innerHTML.includes("⚠️")) {
+                    const currentCal = kcalDisplay.innerText;
+                    if (currentCal !== '—' && !isNaN(parseFloat(currentCal))) {
+                        adviceMessage.innerHTML = '🥗 Отличная цель! Придерживайся диапазона для баланса.';
+                        adviceMessage.style.background = "#fff3e6";
+                        adviceMessage.style.color = "#9b7b5e";
+                    } else {
+                        adviceMessage.innerHTML = 'Заполните данные и нажмите «Рассчитать»';
+                        adviceMessage.style.background = "#fff3e6";
+                        adviceMessage.style.color = "#9b7b5e";
+                    }
+                }
+            }, 3200);
+        }
+
+        // Функция валидации полей
+        function validateInputs() {
+            let age = parseFloat(ageInput.value);
+            let weight = parseFloat(weightInput.value);
+            let height = parseFloat(heightInput.value);
+
+            // Проверки на NaN и разумные пределы
+            if (isNaN(age) || age < 15 || age > 120) {
+                showError('Возраст должен быть от 15 до 120 лет');
+                return null;
+            }
+            if (isNaN(weight) || weight < 20 || weight > 300) {
+                showError('Вес должен быть от 20 до 300 кг');
+                return null;
+            }
+            if (isNaN(height) || height < 100 || height > 250) {
+                showError('Рост должен быть от 100 до 250 см');
+                return null;
+            }
+            return { age, weight, height };
+        }
+
+        // Главная логика расчёта: Mifflin-St Jeor
+        function calculateCalories() {
+            // Сброс стилей ошибки, если предыдущее сообщение было ошибкой
+            adviceMessage.style.background = "#fff3e6";
+            adviceMessage.style.color = "#9b7b5e";
+            
+            const validData = validateInputs();
+            if (!validData) {
+                // сбросить значения результата, потому что данные невалидны
+                kcalDisplay.innerText = '—';
+                bmrValueSpan.innerText = '—';
+                tdeeValueSpan.innerText = '—';
+                return;
+            }
+
+            const { age, weight, height } = validData;
+            const gender = genderSelect.value; // 'male' или 'female'
+            const activityFactor = parseFloat(activitySelect.value);
+
+            // Формула Миффлина-Сан-Жеора
+            let bmr;
+            if (gender === 'male') {
+                bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+            } else {
+                bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+            }
+
+            // Округляем BMR до целого
+            bmr = Math.round(bmr);
+            // TDEE (дневная норма с активностью)
+            let tdee = Math.round(bmr * activityFactor);
+
+            // Функция для красивого форматирования чисел с разделением тысяч (по желанию)
+            const formatNumber = (num) => num.toLocaleString('ru-RU');
+
+            // Обновляем интерфейс
+            kcalDisplay.innerText = formatNumber(tdee);
+            bmrValueSpan.innerText = formatNumber(bmr) + ' ккал';
+            tdeeValueSpan.innerText = formatNumber(tdee) + ' ккал';
+
+            // Дружественный совет в зависимости от цели (поддержание, похудение, набор)
+            const forWeightLoss = Math.round(tdee - 300);
+            const forWeightGain = Math.round(tdee + 300);
+            
+            let customAdvice = '';
+            const targetWeight = weight; // текущий вес для подсказки
+            
+            if (targetWeight < 60 && gender === 'female' && height < 165) customAdvice = '💪 Твой метаболизм активен. Для качественного набора мышц добавь 200-300 ккал.';
+            else if (targetWeight > 90) customAdvice = '🥑 Чтобы мягко снижать вес, попробуй придерживаться ~' + forWeightLoss + ' ккал.';
+            else if (targetWeight > 75 && gender === 'male') customAdvice = '🏋️‍♂️ Для жиросжигания рекомендовано '
+
+
++ forWeightLoss + ' – ' + tdee + ' ккал, сохраняя белок.';
+            else customAdvice = '✨ Поддержание: ' + tdee + ' ккал. Для похудения ≈' + forWeightLoss + ' ккал, для набора ≈' + forWeightGain + ' ккал.';
+
+            // Добавляем акцент на активности если выбрана высокая нагрузка
+            if (activityFactor >= 1.725) {
+                customAdvice += ' 🔥 У тебя высокая активность — не забывай восполнять энергию углеводами.';
+            } else if (activityFactor <= 1.2) {
+                customAdvice += ' 🧘‍♀️ При сидячем режиме старайся увеличить NEAT-активность (прогулки).';
+            }
+
+            adviceMessage.innerHTML = '📌 ' + customAdvice;
+        }
+
+        // Дополнительная функция для автоматического обновления при изменении полей (опционально)
+        // Сделаем live-расчёт при изменении любого поля, чтобы было интерактивно.
+        // Но приоритет — кнопка; также пересчёт при любом изменении данных.
+        function tryAutoCalculate() {
+            // но не спамим ошибками, если невалидно — пока не обновляем результаты, но пересчитываем только когда валидно
+            const validData = validateInputs();
+            if (!validData) {
+                // Если невалидно, то просто не обновляем результат, но и не показываем ложные цифры.
+                // Однако если уже есть какие-то предыдущие цифры, имеет смысл очистить чтобы не вводить в заблуждение
+                if(kcalDisplay.innerText !== '—') {
+                    kcalDisplay.innerText = '—';
+                    bmrValueSpan.innerText = '—';
+                    tdeeValueSpan.innerText = '—';
+                    adviceMessage.innerHTML = '⚠️ Исправьте значения (возраст, вес или рост)';
+                    adviceMessage.style.background = "#ffe0db";
+                }
+                return;
+            }
+            // Если валидно - проводим полноценный расчёт
+            calculateCalories();
+        }
+
+        // Привязываем обработчики событий для интерактивности (авто расчет после изменений)
+        const inputsList = [genderSelect, ageInput, weightInput, heightInput, activitySelect];
+        inputsList.forEach(input => {
+            input.addEventListener('change', () => {
+                tryAutoCalculate();
+            });
+            if(input.tagName === 'INPUT') {
+                input.addEventListener('input', () => {
+                    tryAutoCalculate();
+                });
+            }
+        });
+
+        // Кнопка тоже выполняет полный расчёт с валидацией и сбросом стилей
+        calculateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // перед расчётом принудительно парсим и валидируем (очистим сообщения ошибок)
+            const valid = validateInputs();
+            if(!valid) {
+                kcalDisplay.innerText = '—';
+                bmrValueSpan.innerText = '—';
+                tdeeValueSpan.innerText = '—';
+                return;
+            }
+            calculateCalories();
+            // Небольшая вибрация кнопки для фидбека (чисто визуальная)
+            calculateBtn.style.transform = 'scale(0.98)';
+            setTimeout(() => { calculateBtn.style.transform = ''; }, 120);
+        });
+
+        // Инициализация: при загрузке страницы сразу посчитаем с дефолтными значениями (вес 70, рост 170, пол мужчина, возраст 28)
+        // Имитируем стартовый расчёт
+        setTimeout(() => {
+            tryAutoCalculate();
+        }, 10);
+    })();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Calorie | Калькулятор калорий</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+
+
+linear-gradient(145deg, #1a2f2c 0%, #0e1e1c 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* главная карточка */
+        .calorie-card {
+            max-width: 580px;
+            width: 100%;
+            background: rgba(255, 248, 235, 0.97);
+            backdrop-filter: blur(2px);
+            border-radius: 56px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 215, 175, 0.3);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .calorie-card:hover {
+            transform: scale(1.01);
+        }
+
+        /* шапка с энергией */
+        .hero {
+            background: #f7b05e;
+            background: linear-gradient(135deg, #ffb347, #ff8c1a);
+            padding: 28px 24px;
+            text-align: center;
+            color: #2c221b;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .hero h1 span {
+            font-size: 2.2rem;
+        }
+
+        .hero p {
+            margin-top: 8px;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        /* основной контент */
+        .content {
+            padding: 28px 28px 32px;
+        }
+
+        /* группы полей */
+        .input-group {
+            margin-bottom: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #3e2a22;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group label i {
+            font-style: normal;
+            font-size: 1.2rem;
+        }
+
+        .input-field {
+            display: flex;
+            align-items: center;
+            background: #fff8f0;
+            border-radius: 40px;
+            border: 1.5px solid #ffe0bc;
+            transition: all 0.2s;
+            padding: 4px 18px;
+        }
+
+        .input-field:focus-within {
+            border-color: #ff8c1a;
+            box-shadow: 0 0 0 3px rgba(255, 140, 26, 0.2);
+            background: white;
+        }
+
+        .input-field input, .input-field select {
+            width: 100%;
+            padding: 14px 0 14px 8px;
+            font-size: 1rem;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-weight: 500;
+            color: #2c3e2b;
+        }
+
+        .input-field select {
+            cursor: pointer;
+        }
+
+        .input-field span {
+            color: #b97f44;
+            font-weight: 500;
+            padding-right: 6px;
+        }
+
+        /* двойной ряд для пола и активности */
+        .double-row {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .double-row .input-group {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        /* кнопка расчёта */
+        .calc-btn {
+            width: 100%;
+            background: #2b5e4c;
+            border: none;
+            padding: 16px;
+            border-radius: 60px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            margin: 24px 0 20px;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 6px 0 #1b3e32;
+        }
+
+        .calc-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #1b3e32;
+        }
+
+        .calc-btn:hover {
+            background: #3f7a64;
+
+
+}
+
+        /* результат */
+        .result-panel {
+            background: #f3efe7;
+            border-radius: 36px;
+            padding: 18px 20px;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .total-calories {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .total-calories .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #a57248;
+            font-weight: 600;
+        }
+
+        .kcal-number {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: #2e5a47;
+            line-height: 1;
+            margin: 8px 0;
+            letter-spacing: -2px;
+        }
+
+        .breakdown {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-top: 1px solid #e2d4c6;
+            padding-top: 16px;
+            margin-top: 8px;
+        }
+
+        .breakdown-item {
+            flex: 1;
+            text-align: center;
+            background: white;
+            border-radius: 28px;
+            padding: 10px 5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .breakdown-item span:first-child {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #a07854;
+            display: block;
+        }
+
+        .breakdown-item .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #2c4a3b;
+        }
+
+        .info-message {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 18px;
+            color: #9b7b5e;
+            background: #fff3e6;
+            padding: 8px 12px;
+            border-radius: 60px;
+        }
+
+        .error-message {
+            color: #c0392b;
+            background: #ffe6e2;
+            border-radius: 60px;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 14px 20px 20px;
+            color: #c2a07e;
+            border-top: 1px solid #eedfcb;
+            background: #fffbf5;
+        }
+
+        max-width: 500px {
+            .content {
+                padding: 20px;
+            }
+            .kcal-number {
+                font-size: 2.8rem;
+            }
+            .breakdown-item .value {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="calorie-card">
+    <div class="hero">
+        <h1>
+            <span>🔥</span> CalorieFuel
+        </h1>
+        <p>Твой персональный баланс энергии</p>
+    </div>
+    <div class="content">
+        <!-- Параметры пользователя -->
+        <div class="double-row">
+            <div class="input-group">
+                <label><i>🧑</i> Пол</label>
+                <div class="input-field">
+                    <select id="gender">
+                        <option value="female">Женщина</option>
+                        <option value="male" selected>Мужчина</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label><i>📏</i> Возраст (лет)</label>
+                <div class="input-field">
+                    <input type="number" id="age" placeholder="25" value="28" step="1" min="15" max="120">
+                </div>
+            </div>
+        </div>
+
+        <div class="double-row">
+            <div class="input-group">
+                <label><i>⚖️</i> Вес (кг)</label>
+                <div class="input-field">
+                    <input type="number" id="weight" placeholder="70" value="70" step="0.5" min="20" max="300">
+                </div>
+            </div>
+            <div class="input-group">
+
+
+<label><i>📏</i> Рост (см)</label>
+                <div class="input-field">
+                    <input type="number" id="height" placeholder="170" value="170" step="1" min="100" max="250">
+                </div>
+            </div>
+        </div>
+
+        <!-- Уровень активности -->
+        <div class="input-group">
+            <label><i>🏃‍♂️</i> Физическая активность</label>
+            <div class="input-field">
+                <select id="activity">
+                    <option value="1.2">Минимальная (сидячий образ жизни)</option>
+                    <option value="1.375">Лёгкая (1-3 тренировки в неделю)</option>
+                    <option value="1.55" selected>Умеренная (3-5 тренировок)</option>
+                    <option value="1.725">Высокая (6-7 тренировок)</option>
+                    <option value="1.9">Экстремальная (физическая работа + спорт)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Кнопка расчёта -->
+        <button class="calc-btn" id="calculateBtn">
+            <span>✨</span> Рассчитать суточную норму
+        </button>
+
+        <!-- Блок результатов -->
+        <div id="resultContainer">
+            <div class="result-panel">
+                <div class="total-calories">
+                    <div class="label">ТВОЯ ДНЕВНАЯ НОРМА</div>
+                    <div class="kcal-number" id="kcalDisplay">—</div>
+                    <div style="font-size: 0.8rem; font-weight: 500;">ккал / день</div>
+                </div>
+                <div class="breakdown" id="breakdownInfo">
+                    <div class="breakdown-item">
+                        <span>⚡ Базовый метаболизм (BMR)</span>
+                        <div class="value" id="bmrValue">—</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>🏋️‍♂️ С учётом активности</span>
+                        <div class="value" id="tdeeValue">—</div>
+                    </div>
+                </div>
+                <div class="info-message" id="adviceMessage">
+                    Заполните данные и нажмите «Рассчитать»
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        🍎 Формула Миффлина — Сан-Жеора | Индивидуальный подход к здоровому питанию
+    </footer>
+</div>
+
+<script>
+    (function() {
+        // DOM элементы
+        const genderSelect = document.getElementById('gender');
+        const ageInput = document.getElementById('age');
+        const weightInput = document.getElementById('weight');
+        const heightInput = document.getElementById('height');
+        const activitySelect = document.getElementById('activity');
+        const calculateBtn = document.getElementById('calculateBtn');
+
+        // Элементы вывода
+        const kcalDisplay = document.getElementById('kcalDisplay');
+        const bmrValueSpan = document.getElementById('bmrValue');
+        const tdeeValueSpan = document.getElementById('tdeeValue');
+        const adviceMessage = document.getElementById('adviceMessage');
+
+        // Функция для показа ошибки (кратковременной в блоке советов, но не затирает полностью)
+        function showError(text) {
+            adviceMessage.innerHTML = `⚠️ ${text}`;
+            adviceMessage.style.background = "#ffe0db";
+            adviceMessage.style.color = "#bc3900";
+            // через 3 секунды вернуть нейтральный совет, если снова не будет пересчёта
+            setTimeout(() => {
+                if (adviceMessage.innerHTML.includes("⚠️")) {
+                    const currentCal = kcalDisplay.innerText;
+                    if (currentCal !== '—' && !isNaN(parseFloat(currentCal))) {
+                        adviceMessage.innerHTML = '🥗 Отличная цель! Придерживайся диапазона для баланса.';
+                        adviceMessage.style.background = "#fff3e6";
+                        adviceMessage.style.color = "#9b7b5e";
+                    } else {
+                        adviceMessage.innerHTML = 'Заполните данные и нажмите «Рассчитать»';
+
+
+adviceMessage.style.background = "#fff3e6";
+                        adviceMessage.style.color = "#9b7b5e";
+                    }
+                }
+            }, 3200);
+        }
+
+        // Функция валидации полей
+        function validateInputs() {
+            let age = parseFloat(ageInput.value);
+            let weight = parseFloat(weightInput.value);
+            let height = parseFloat(heightInput.value);
+
+            // Проверки на NaN и разумные пределы
+            if (isNaN(age) || age < 15 || age > 120) {
+                showError('Возраст должен быть от 15 до 120 лет');
+                return null;
+            }
+            if (isNaN(weight) || weight < 20 || weight > 300) {
+                showError('Вес должен быть от 20 до 300 кг');
+                return null;
+            }
+            if (isNaN(height) || height < 100 || height > 250) {
+                showError('Рост должен быть от 100 до 250 см');
+                return null;
+            }
+            return { age, weight, height };
+        }
+
+        // Главная логика расчёта: Mifflin-St Jeor
+        function calculateCalories() {
+            // Сброс стилей ошибки, если предыдущее сообщение было ошибкой
+            adviceMessage.style.background = "#fff3e6";
+            adviceMessage.style.color = "#9b7b5e";
+            
+            const validData = validateInputs();
+            if (!validData) {
+                // сбросить значения результата, потому что данные невалидны
+                kcalDisplay.innerText = '—';
+                bmrValueSpan.innerText = '—';
+                tdeeValueSpan.innerText = '—';
+                return;
+            }
+
+            const { age, weight, height } = validData;
+            const gender = genderSelect.value; // 'male' или 'female'
+            const activityFactor = parseFloat(activitySelect.value);
+
+            // Формула Миффлина-Сан-Жеора
+            let bmr;
+            if (gender === 'male') {
+                bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+            } else {
+                bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+            }
+
+            // Округляем BMR до целого
+            bmr = Math.round(bmr);
+            // TDEE (дневная норма с активностью)
+            let tdee = Math.round(bmr * activityFactor);
+
+            // Функция для красивого форматирования чисел с разделением тысяч (по желанию)
+            const formatNumber = (num) => num.toLocaleString('ru-RU');
+
+            // Обновляем интерфейс
+            kcalDisplay.innerText = formatNumber(tdee);
+            bmrValueSpan.innerText = formatNumber(bmr) + ' ккал';
+            tdeeValueSpan.innerText = formatNumber(tdee) + ' ккал';
+
+            // Дружественный совет в зависимости от цели (поддержание, похудение, набор)
+            const forWeightLoss = Math.round(tdee - 300);
+            const forWeightGain = Math.round(tdee + 300);
+            
+            let customAdvice = '';
+            const targetWeight = weight; // текущий вес для подсказки
+            
+            if (targetWeight < 60 && gender === 'female' && height < 165) customAdvice = '💪 Твой метаболизм активен. Для качественного набора мышц добавь 200-300 ккал.';
+            else if (targetWeight > 90) customAdvice = '🥑 Чтобы мягко снижать вес, попробуй придерживаться ~' + forWeightLoss + ' ккал.';
+            else if (targetWeight > 75 && gender === 'male') customAdvice = '🏋️‍♂️ Для жиросжигания рекомендовано ' + forWeightLoss + ' – ' + tdee + ' ккал, сохраняя белок.';
+            else customAdvice = '✨ Поддержание: ' + tdee + ' ккал. Для похудения ≈' + forWeightLoss + ' ккал, для набора ≈' + forWeightGain + ' ккал.';
+
+            // Добавляем акцент на активности если выбрана высокая нагрузка
+            if (activityFactor >= 1.725) {
+                customAdvice += ' 🔥 У тебя высокая активность — не забывай восполнять энергию углеводами.';
+            } else if (activityFactor <= 1.2) {
+                customAdvice += ' 🧘‍♀️ При сидячем режиме
+
+
+старайся увеличить NEAT-активность (прогулки).';
+            }
+
+            adviceMessage.innerHTML = '📌 ' + customAdvice;
+        }
+
+        // Дополнительная функция для автоматического обновления при изменении полей (опционально)
+        // Сделаем live-расчёт при изменении любого поля, чтобы было интерактивно.
+        // Но приоритет — кнопка; также пересчёт при любом изменении данных.
+        function tryAutoCalculate() {
+            // но не спамим ошибками, если невалидно — пока не обновляем результаты, но пересчитываем только когда валидно
+            const validData = validateInputs();
+            if (!validData) {
+                // Если невалидно, то просто не обновляем результат, но и не показываем ложные цифры.
+                // Однако если уже есть какие-то предыдущие цифры, имеет смысл очистить чтобы не вводить в заблуждение
+                if(kcalDisplay.innerText !== '—') {
+                    kcalDisplay.innerText = '—';
+                    bmrValueSpan.innerText = '—';
+                    tdeeValueSpan.innerText = '—';
+                    adviceMessage.innerHTML = '⚠️ Исправьте значения (возраст, вес или рост)';
+                    adviceMessage.style.background = "#ffe0db";
+                }
+                return;
+            }
+            // Если валидно - проводим полноценный расчёт
+            calculateCalories();
+        }
+
+        // Привязываем обработчики событий для интерактивности (авто расчет после изменений)
+        const inputsList = [genderSelect, ageInput, weightInput, heightInput, activitySelect];
+        inputsList.forEach(input => {
+            input.addEventListener('change', () => {
+                tryAutoCalculate();
+            });
+            if(input.tagName === 'INPUT') {
+                input.addEventListener('input', () => {
+                    tryAutoCalculate();
+                });
+            }
+        });
+
+        // Кнопка тоже выполняет полный расчёт с валидацией и сбросом стилей
+        calculateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // перед расчётом принудительно парсим и валидируем (очистим сообщения ошибок)
+            const valid = validateInputs();
+            if(!valid) {
+                kcalDisplay.innerText = '—';
+                bmrValueSpan.innerText = '—';
+                tdeeValueSpan.innerText = '—';
+                return;
+            }
+            calculateCalories();
+            // Небольшая вибрация кнопки для фидбека (чисто визуальная)
+            calculateBtn.style.transform = 'scale(0.98)';
+            setTimeout(() => { calculateBtn.style.transform = ''; }, 120);
+        });
+
+        // Инициализация: при загрузке страницы сразу посчитаем с дефолтными значениями (вес 70, рост 170, пол мужчина, возраст 28)
+        // Имитируем стартовый расчёт
+        setTimeout(() => {
+            tryAutoCalculate();
+        }, 10);
+    })();
+</script>
+</body>
+</html>
+
+
